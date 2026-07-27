@@ -1,4 +1,4 @@
-# OutboxSupport
+# outbox-support
 
 Shared support library for implementing the transactional outbox pattern in Spring Boot services.
 
@@ -34,7 +34,7 @@ Add the dependency:
 ```xml
 <dependency>
     <groupId>com.burov</groupId>
-    <artifactId>OutboxSupport</artifactId>
+    <artifactId>outbox-support</artifactId>
     <version>0.0.1</version>
 </dependency>
 ```
