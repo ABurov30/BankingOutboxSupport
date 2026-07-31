@@ -58,7 +58,7 @@ public abstract class OutboxEventEntity {
     @Column(name = "topic", nullable = false)
     private String topic;
 
-    @Column(name = "event_key", nullable = false, unique = true)
+    @Column(name = "event_key", nullable = false)
     private String eventKey;
 
     @Column(name = "schema_version", nullable = false)
