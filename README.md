@@ -1,12 +1,29 @@
 # outbox-support
 
-Shared support library for implementing the transactional outbox pattern in Spring Boot services.
+Shared Java 17 library for implementing the transactional outbox pattern and
+idempotent event consumption in Spring Boot services.
 
-The package provides:
+## What Is Included
 
-- `OutboxEventEntity` - base JPA mapped superclass for outbox event tables.
-- `OutboxEventStatus` - common event statuses: `PENDING`, `PUBLISHED`, `FAILED`.
-- `KafkaOnSentHandler` - helper interface for marking events as published or failed after Kafka send callbacks.
+- `OutboxEventEntity` - base JPA mapped superclass for service-specific outbox
+  event tables.
+- `OutboxEventStatus` - common event states: `PENDING`, `PUBLISHED`, `FAILED`.
+- `KafkaOnSentHandler` - helper interface for updating outbox events after Kafka
+  send callbacks.
+- `ProcessedEvent` - base mapped superclass for processed-event tables.
+- `BaseProcessedEventRepository` - Spring Data repository base for processed
+  events.
+- `IdempotencyHandler` - helper interface for checking and storing processed
+  event keys.
+
+## Documentation
+
+- [Usage guide](docs/usage.md) - dependency setup, entity examples, Kafka send
+  handling, and idempotency support.
+- [Development guide](docs/development.md) - project layout, verification,
+  release, and maintenance notes.
+- [Agent instructions](AGENTS.md) - repository-specific guidance for coding
+  agents.
 
 ## Requirements
 
@@ -14,7 +31,7 @@ The package provides:
 - Maven
 - Spring Data JPA
 - Hibernate 6
-- PostgreSQL-compatible `jsonb` column for event payloads
+- PostgreSQL-compatible `jsonb` column support for outbox payloads
 
 ## Installation
 
@@ -35,11 +52,12 @@ Add the dependency:
 <dependency>
     <groupId>com.burov</groupId>
     <artifactId>outbox-support</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.5</version>
 </dependency>
 ```
 
-For local development with private GitHub Packages, configure Maven credentials in `~/.m2/settings.xml`:
+For private GitHub Packages access, configure Maven credentials in
+`~/.m2/settings.xml`:
 
 ```xml
 <servers>
@@ -53,9 +71,9 @@ For local development with private GitHub Packages, configure Maven credentials 
 
 The token needs permission to read packages.
 
-## Usage
+## Quick Start
 
-Create a service-specific outbox entity by extending `OutboxEventEntity`:
+Create a service-specific outbox entity:
 
 ```java
 package com.example.outbox;
@@ -75,56 +93,24 @@ Create a Spring Data repository:
 ```java
 package com.example.outbox;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> {
 }
 ```
 
-Use `KafkaOnSentHandler` in the component that processes Kafka send results:
-
-```java
-package com.example.outbox;
-
-import outboxsupport.KafkaOnSentHandler;
-import org.springframework.stereotype.Component;
-
-import java.util.UUID;
-
-@Component
-public class OutboxKafkaResultHandler implements KafkaOnSentHandler {
-    private final OutboxEventRepository repository;
-
-    public OutboxKafkaResultHandler(OutboxEventRepository repository) {
-        this.repository = repository;
-    }
-
-    public void handleSuccess(UUID eventId) {
-        onPublish(eventId, repository);
-    }
-
-    public void handleFailure(UUID eventId, Throwable error) {
-        onFailed(eventId, error, repository);
-    }
-}
-```
-
-## Publishing
-
-The package is published to GitHub Packages by the workflow in `.github/workflows/publish.yml`.
-
-Publication can be triggered manually from GitHub Actions or by creating a GitHub release. The workflow runs:
-
-```bash
-mvn --batch-mode clean deploy
-```
-
-Before publishing a new release, update the version in `pom.xml`.
+Use `KafkaOnSentHandler` from the component that receives Kafka send results.
+See the [usage guide](docs/usage.md) for a complete example and retry behavior.
 
 ## Build
 
 ```bash
 mvn clean package
+```
+
+Use the full verification command before publishing or opening a pull request:
+
+```bash
+mvn --batch-mode verify
 ```
