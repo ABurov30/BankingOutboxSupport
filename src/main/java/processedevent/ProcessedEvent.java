@@ -1,4 +1,4 @@
-package ProcessedEvent;
+package processedevent;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;

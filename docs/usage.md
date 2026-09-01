@@ -1,6 +1,7 @@
 # Usage Guide
 
-This guide shows how to consume `outbox-support` from a Spring Boot service.
+This guide shows how to consume the `support` library from a Spring Boot
+service.
 
 ## Maven Dependency
 
@@ -20,8 +21,8 @@ Add the library dependency:
 ```xml
 <dependency>
     <groupId>com.burov</groupId>
-    <artifactId>outbox-support</artifactId>
-    <version>0.0.5</version>
+    <artifactId>support</artifactId>
+    <version>0.0.1</version>
 </dependency>
 ```
 
@@ -37,7 +38,7 @@ package com.example.outbox;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import OutboxSupport.OutboxEventEntity;
+import outboxsupport.OutboxEventEntity;
 
 @Entity
 @Table(name = "outbox_events")
@@ -54,7 +55,7 @@ The base class provides these columns:
 | `aggregate_id` | UUID of the aggregate that produced the event. |
 | `event_type` | Event name, such as `AccountCreated`. |
 | `payload` | JSON payload stored as `jsonb`. |
-| `status` | `PENDING`, `PUBLISHED`, or `FAILED`. |
+| `status` | Stored from the `outboxEventStatus` property: `PENDING`, `PUBLISHED`, or `FAILED`. |
 | `retry_count` | Number of publish attempts recorded by the handler. |
 | `error_message` | Last send error message. |
 | `created_at` | Creation timestamp managed by Hibernate. |
@@ -96,7 +97,7 @@ package com.example.outbox;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
-import OutboxSupport.KafkaOnSentHandler;
+import outboxsupport.KafkaOnSentHandler;
 
 @Component
 public class OutboxKafkaResultHandler implements KafkaOnSentHandler {
@@ -126,7 +127,7 @@ events remain `PENDING` until the fifth recorded attempt; after that they become
 
 ## Idempotent Consumption
 
-Create a processed-event entity by extending `ProcessedEvent`:
+Create a processed-event entity by extending `processedevent`:
 
 ```java
 package com.example.inbox;
@@ -139,18 +140,18 @@ import jakarta.persistence.Table;
 
 import java.util.UUID;
 
-import ProcessedEvent.ProcessedEvent;
+import processedevent.processedevent;
 
 @Entity
 @Table(name = "processed_events")
-public class AccountProcessedEvent extends ProcessedEvent {
+public class AccountProcessedEvent extends processedevent {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 }
 ```
 
-`ProcessedEvent` provides the `event_key` and `processed_at` columns. The
+`processedevent` provides the `event_key` and `processed_at` columns. The
 service-owned entity should define its own UUID primary key.
 
 Create a repository by extending `BaseProcessedEventRepository`:
@@ -158,7 +159,7 @@ Create a repository by extending `BaseProcessedEventRepository`:
 ```java
 package com.example.inbox;
 
-import ProcessedEvent.BaseProcessedEventRepository;
+import processedevent.BaseProcessedEventRepository;
 
 public interface AccountProcessedEventRepository
         extends BaseProcessedEventRepository<AccountProcessedEvent> {
@@ -173,7 +174,7 @@ package com.example.inbox;
 import java.time.Instant;
 
 import org.springframework.stereotype.Component;
-import ProcessedEvent.IdempotencyHandler;
+import processedevent.IdempotencyHandler;
 
 @Component
 public class AccountEventIdempotency implements IdempotencyHandler {
@@ -198,3 +199,49 @@ public class AccountEventIdempotency implements IdempotencyHandler {
 
 The `event_key` column is unique and should be populated from the same stable
 event key used by the producer.
+
+## Shared Enums
+
+The library also publishes common enum packages for services that need stable
+domain values across API contracts, persistence, and messaging:
+
+| Package | Types |
+| --- | --- |
+| `enums.account` | `AccountStatus`, `AccountType`, `ReservationStatus` |
+| `enums.auth` | `AuthUserStatus`, `Roles`, `SocialLoginProvider` |
+| `enums.card` | `CardStatus` |
+| `enums.common` | `Currency` |
+| `enums.transaction` | `TransactionDirection`, `TransactionStatus` |
+| `enums.user` | `UserProfileStatus` |
+
+Use them by importing the specific enum type:
+
+```java
+import enums.account.AccountStatus;
+import enums.common.Currency;
+
+AccountStatus status = AccountStatus.ACTIVE;
+Currency currency = Currency.USD;
+```
+
+`Currency` currently includes `USD`, `EUR`, `CNY`, and `GBP`. Each value exposes
+an alphabetic code, numeric ISO 4217 code, and minor unit count.
+
+## Money Unit Conversion
+
+`moneyunitsconverter` converts values between major units (`BigDecimal`) and
+minor units (`Long`) using the selected `Currency` minor unit precision.
+
+```java
+import java.math.BigDecimal;
+
+import moneyunitsconverter.moneyunitsconverter;
+import enums.common.Currency;
+
+Long minor = moneyunitsconverter.toMinor(new BigDecimal("12.34"), Currency.USD);
+BigDecimal major = moneyunitsconverter.toMajor(minor, Currency.USD);
+```
+
+`toMinor` rounds to the currency scale with `RoundingMode.HALF_EVEN` before
+moving the decimal point and returns `longValueExact()`. Callers should handle
+`ArithmeticException` if values may overflow `Long`.

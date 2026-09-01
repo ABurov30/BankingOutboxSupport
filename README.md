@@ -1,7 +1,8 @@
-# outbox-support
+# support
 
 Shared Java 17 library for implementing the transactional outbox pattern and
-idempotent event consumption in Spring Boot services.
+idempotent event consumption in Spring Boot services, plus common banking
+domain enums and money unit conversion helpers.
 
 ## What Is Included
 
@@ -10,11 +11,15 @@ idempotent event consumption in Spring Boot services.
 - `OutboxEventStatus` - common event states: `PENDING`, `PUBLISHED`, `FAILED`.
 - `KafkaOnSentHandler` - helper interface for updating outbox events after Kafka
   send callbacks.
-- `ProcessedEvent` - base mapped superclass for processed-event tables.
+- `processedevent` - base mapped superclass for processed-event tables.
 - `BaseProcessedEventRepository` - Spring Data repository base for processed
   events.
 - `IdempotencyHandler` - helper interface for checking and storing processed
   event keys.
+- `moneyunitsconverter` - helper for converting between major and minor money
+  units with currency-specific precision.
+- `enums.*` - shared account, auth, card, common, transaction, and user enum
+  types used by banking services.
 
 ## Documentation
 
@@ -51,8 +56,8 @@ Add the dependency:
 ```xml
 <dependency>
     <groupId>com.burov</groupId>
-    <artifactId>outbox-support</artifactId>
-    <version>0.0.5</version>
+    <artifactId>support</artifactId>
+    <version>0.0.1</version>
 </dependency>
 ```
 
@@ -80,7 +85,7 @@ package com.example.outbox;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import OutboxSupport.OutboxEventEntity;
+import outboxsupport.OutboxEventEntity;
 
 @Entity
 @Table(name = "outbox_events")
@@ -102,6 +107,18 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> 
 
 Use `KafkaOnSentHandler` from the component that receives Kafka send results.
 See the [usage guide](docs/usage.md) for a complete example and retry behavior.
+
+Use shared enums and money conversion helpers directly from their packages:
+
+```java
+import java.math.BigDecimal;
+
+import moneyunitsconverter.moneyunitsconverter;
+import enums.common.Currency;
+
+Long cents = moneyunitsconverter.toMinor(new BigDecimal("12.34"), Currency.USD);
+BigDecimal dollars = moneyunitsconverter.toMajor(cents, Currency.USD);
+```
 
 ## Build
 

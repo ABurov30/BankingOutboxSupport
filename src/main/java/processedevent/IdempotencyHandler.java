@@ -1,4 +1,4 @@
-package ProcessedEvent;
+package processedevent;
 
 public interface IdempotencyHandler {
 

@@ -1,7 +1,6 @@
 package enums.common;
 
 public enum Currency {
-
   USD("USD", 840, 2),
   EUR("EUR", 978, 2),
   CNY("CNY", 156, 2),

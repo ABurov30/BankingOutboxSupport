@@ -9,12 +9,25 @@
 |-- docs/
 |-- pom.xml
 |-- config/checkstyle/checkstyle.xml
-`-- src/main/java/OutboxSupport/
+`-- src/main/java/
+    |-- moneyunitsconverter/
+    |-- outboxsupport/
+    |-- processedevent/
+    `-- enums/
 ```
 
-The library source lives in `src/main/java/OutboxSupport`. Keep this project as
-a reusable support library; service-specific polling, locking, Kafka producer,
-and domain logic should stay in consuming services.
+The library source lives under `src/main/java`. Keep this project as a reusable
+support library; service-specific polling, locking, Kafka producer, and domain
+logic should stay in consuming services.
+
+Public package areas:
+
+- `outboxsupport` contains mapped outbox base classes and Kafka send-result
+  helpers.
+- `processedevent` contains mapped processed-event base classes and repository
+  helpers for idempotent consumption.
+- `moneyunitsconverter` contains shared major/minor currency conversion helpers.
+- `enums` contains common banking enum values grouped by domain.
 
 ## Build And Verify
 
@@ -34,12 +47,31 @@ The `verify` phase runs Checkstyle using
 `config/checkstyle/checkstyle.xml`. Generated Maven output belongs in `target/`
 and is ignored by Git.
 
+CI runs the same command on pushes and pull requests targeting `main`.
+
+## Formatting
+
+Format Java sources before running Checkstyle:
+
+```bash
+mvn spotless:apply
+```
+
+Check formatting without modifying files:
+
+```bash
+mvn spotless:check
+```
+
+Spotless uses `google-java-format`, which matches the two-space indentation and
+single non-static import group expected by Checkstyle.
+
 ## Versioning
 
 The current artifact version is defined in `pom.xml`:
 
 ```xml
-<version>0.0.5</version>
+<version>0.0.1</version>
 ```
 
 When changing the published version, update:

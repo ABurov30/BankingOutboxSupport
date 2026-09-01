@@ -1,4 +1,4 @@
-package OutboxSupport;
+package outboxsupport;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -10,9 +10,7 @@ public interface KafkaOnSentHandler {
   default <E extends OutboxEventEntity> void onPublish(
       UUID eventId, JpaRepository<E, UUID> repository) {
     E event =
-        repository
-            .findById(eventId)
-            .orElseThrow(() -> new RuntimeException("Event not found"));
+        repository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
     event.setOutboxEventStatus(OutboxEventStatus.PUBLISHED);
     event.setSentAt(LocalDateTime.now());
     event.setRetryCount(event.getRetryCount() + 1);
@@ -22,9 +20,7 @@ public interface KafkaOnSentHandler {
   default <E extends OutboxEventEntity> void onFailed(
       UUID eventId, Throwable e, JpaRepository<E, UUID> repository) {
     E event =
-        repository
-            .findById(eventId)
-            .orElseThrow(() -> new RuntimeException("Event not found"));
+        repository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
 
     int retryCount = event.getRetryCount() + 1;
     event.setErrorMessage(e.getMessage());
