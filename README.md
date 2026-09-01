@@ -80,7 +80,7 @@ package com.example.outbox;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import outboxsupport.OutboxEventEntity;
+import OutboxSupport.OutboxEventEntity;
 
 @Entity
 @Table(name = "outbox_events")

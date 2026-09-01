@@ -9,10 +9,10 @@
 |-- docs/
 |-- pom.xml
 |-- config/checkstyle/checkstyle.xml
-`-- src/main/java/outboxsupport/
+`-- src/main/java/OutboxSupport/
 ```
 
-The library source lives in `src/main/java/outboxsupport`. Keep this project as
+The library source lives in `src/main/java/OutboxSupport`. Keep this project as
 a reusable support library; service-specific polling, locking, Kafka producer,
 and domain logic should stay in consuming services.
 

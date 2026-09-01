@@ -1,4 +1,4 @@
-package outboxsupport;
+package OutboxSupport;
 
 public enum OutboxEventStatus {
     PENDING,

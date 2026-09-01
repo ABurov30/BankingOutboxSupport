@@ -37,7 +37,7 @@ package com.example.outbox;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import outboxsupport.OutboxEventEntity;
+import OutboxSupport.OutboxEventEntity;
 
 @Entity
 @Table(name = "outbox_events")
@@ -94,24 +94,25 @@ callbacks:
 package com.example.outbox;
 
 import java.util.UUID;
+
 import org.springframework.stereotype.Component;
-import outboxsupport.KafkaOnSentHandler;
+import OutboxSupport.KafkaOnSentHandler;
 
 @Component
 public class OutboxKafkaResultHandler implements KafkaOnSentHandler {
-  private final OutboxEventRepository repository;
+    private final OutboxEventRepository repository;
 
-  public OutboxKafkaResultHandler(OutboxEventRepository repository) {
-    this.repository = repository;
-  }
+    public OutboxKafkaResultHandler(OutboxEventRepository repository) {
+        this.repository = repository;
+    }
 
-  public void handleSuccess(UUID eventId) {
-    onPublish(eventId, repository);
-  }
+    public void handleSuccess(UUID eventId) {
+        onPublish(eventId, repository);
+    }
 
-  public void handleFailure(UUID eventId, Throwable error) {
-    onFailed(eventId, error, repository);
-  }
+    public void handleFailure(UUID eventId, Throwable error) {
+        onFailed(eventId, error, repository);
+    }
 }
 ```
 
@@ -135,15 +136,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
 import java.util.UUID;
-import outboxsupport.ProcessedEvent;
+
+import ProcessedEvent.ProcessedEvent;
 
 @Entity
 @Table(name = "processed_events")
 public class AccountProcessedEvent extends ProcessedEvent {
-  @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 }
 ```
 
@@ -155,10 +158,10 @@ Create a repository by extending `BaseProcessedEventRepository`:
 ```java
 package com.example.inbox;
 
-import outboxsupport.BaseProcessedEventRepository;
+import ProcessedEvent.BaseProcessedEventRepository;
 
 public interface AccountProcessedEventRepository
-    extends BaseProcessedEventRepository<AccountProcessedEvent> {
+        extends BaseProcessedEventRepository<AccountProcessedEvent> {
 }
 ```
 
@@ -168,27 +171,28 @@ Use `IdempotencyHandler` in a consumer component:
 package com.example.inbox;
 
 import java.time.Instant;
+
 import org.springframework.stereotype.Component;
-import outboxsupport.IdempotencyHandler;
+import ProcessedEvent.IdempotencyHandler;
 
 @Component
 public class AccountEventIdempotency implements IdempotencyHandler {
-  private final AccountProcessedEventRepository repository;
+    private final AccountProcessedEventRepository repository;
 
-  public AccountEventIdempotency(AccountProcessedEventRepository repository) {
-    this.repository = repository;
-  }
+    public AccountEventIdempotency(AccountProcessedEventRepository repository) {
+        this.repository = repository;
+    }
 
-  public boolean alreadyProcessed(String eventKey) {
-    return isAlreadyProcessed(eventKey, repository);
-  }
+    public boolean alreadyProcessed(String eventKey) {
+        return isAlreadyProcessed(eventKey, repository);
+    }
 
-  public void markProcessed(String eventKey) {
-    AccountProcessedEvent processedEvent = new AccountProcessedEvent();
-    processedEvent.setEventKey(eventKey);
-    processedEvent.setProcessedAt(Instant.now());
-    markAsProcessed(processedEvent, repository);
-  }
+    public void markProcessed(String eventKey) {
+        AccountProcessedEvent processedEvent = new AccountProcessedEvent();
+        processedEvent.setEventKey(eventKey);
+        processedEvent.setProcessedAt(Instant.now());
+        markAsProcessed(processedEvent, repository);
+    }
 }
 ```
 

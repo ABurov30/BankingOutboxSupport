@@ -13,7 +13,7 @@ Repository-specific instructions for coding agents working on `outbox-support`.
 ## Project Context
 
 This repository is a Maven library, not a runnable service. It provides shared
-JPA mapped superclasses and helper interfaces under the `outboxsupport` package
+JPA mapped superclasses and helper interfaces under the `OutboxSupport` package
 for services that implement:
 
 - transactional outbox publishing;
@@ -30,7 +30,7 @@ The published artifact is:
 ## Working Rules
 
 - Keep changes scoped to the library surface requested by the task.
-- Preserve the package name `outboxsupport` unless the task explicitly requires
+- Preserve the package name `OutboxSupport` unless the task explicitly requires
   a breaking API migration.
 - Do not add service-specific business logic to this library.
 - Keep examples and documentation aligned with the current version in

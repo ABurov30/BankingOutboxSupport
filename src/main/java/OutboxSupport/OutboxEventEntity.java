@@ -1,4 +1,4 @@
-package outboxsupport;
+package OutboxSupport;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;

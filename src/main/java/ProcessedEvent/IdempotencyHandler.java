@@ -1,4 +1,4 @@
-package outboxsupport;
+package ProcessedEvent;
 
 public interface IdempotencyHandler {
 
